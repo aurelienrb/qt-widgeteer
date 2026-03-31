@@ -21,6 +21,8 @@
 #include <QTextEdit>
 #include <QToolBar>
 #include <QVBoxLayout>
+#include <QMoveEvent>
+#include <QTimer>
 
 // Sample service class to demonstrate QObject registration
 class SampleService : public QObject {
@@ -32,10 +34,12 @@ public:
 
   // Q_INVOKABLE methods can be called via the "call" command
   Q_INVOKABLE int add(int a, int b) {
+    qDebug() << "add" << a << b;
     return a + b;
   }
 
   Q_INVOKABLE QString greet(const QString& name) {
+    qDebug() << "greet" << name;
     return QStringLiteral("Hello, %1!").arg(name);
   }
 
@@ -356,6 +360,12 @@ private:
     status->showMessage("Ready");
   }
 
+  void moveEvent(QMoveEvent *event) override {
+    qDebug() << "QMoveEvent" << event->pos();
+    QMainWindow::moveEvent(event);
+    qDebug() << "moved, rect=" << frameGeometry() << "globalPos=" << mapToGlobal(QPoint(0, 0));
+  }
+
   // Form widgets
   QLineEdit* nameEdit_ = nullptr;
   QLineEdit* emailEdit_ = nullptr;
@@ -386,21 +396,42 @@ int main(int argc, char* argv[]) {
   widgeteer::Server server;
   server.enableLogging(true);
 
-  quint16 port = 9000;
-  if (argc > 1) {
-    port = static_cast<quint16>(QString::fromLocal8Bit(argv[1]).toUInt());
-  }
+  // quint16 port = 9000;
+  // if (argc > 1) {
+  //   port = static_cast<quint16>(QString::fromLocal8Bit(argv[1]).toUInt());
+  // }
 
-  if (!server.start(port)) {
-    qCritical() << "Failed to start Widgeteer server";
-    return 1;
-  }
+  // if (!server.start(port)) {
+  //   qCritical() << "Failed to start Widgeteer server";
+  //   return 1;
+  // }
 
-  qInfo() << "Widgeteer server running on port" << server.port();
+  // qInfo() << "Widgeteer server running on port" << server.port();
 
   // Create and show main window
   SampleMainWindow window;
   window.show();
+
+  // TODO: accept param less commands
+  server.registerCommand("activate", [&window](const QJsonObject&) {
+    qDebug() << "activating main window";
+    window.raise();
+    window.activateWindow();
+    qDebug() << window.isActiveWindow();
+    return QJsonObject{ { "activate", true } };
+  });
+
+  server.registerCommand("show_context_menu", [&window](const QJsonObject&) {
+    QWidget* w = window.findChild<QWidget*>("nameEdit");
+    if (w) {
+      qDebug() << "show_context_menu" << w->objectName();
+      Q_EMIT w->customContextMenuRequested(QPoint(1, 1));
+    }
+    else {
+      qCritical() << "can't find" << "nameEdit";
+    }
+    return QJsonObject{ { "ok", true } };
+  });
 
   // ========== Extensibility Demo ==========
 
@@ -421,6 +452,21 @@ int main(int argc, char* argv[]) {
                         { "version", QApplication::applicationVersion() },
                         { "pid", QApplication::applicationPid() } };
   });
+
+  QTimer timer;
+  timer.setInterval(std::chrono::milliseconds(100));
+  timer.setSingleShot(false);
+
+  int x = 10;
+  window.move(10, 200);
+  QObject::connect(&timer, &QTimer::timeout, [&]{
+    if (x < 1400) {
+      x += 10;
+      qDebug() << "-- new x:" << x;
+      window.move(x, 200);
+    }
+  });
+  timer.start();
 
   return app.exec();
 }

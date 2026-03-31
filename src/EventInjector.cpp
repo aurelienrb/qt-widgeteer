@@ -79,6 +79,7 @@ EventInjector::Result EventInjector::rightClick(QWidget* target, QPoint pos) {
   }
 
   QPoint clickPos = resolvePosition(target, pos);
+  qDebug() << "rightClick" << clickPos << target->objectName();
   QTest::mouseClick(target, Qt::RightButton, Qt::NoModifier, clickPos);
 
   result.success = true;

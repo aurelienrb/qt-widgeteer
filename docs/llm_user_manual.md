@@ -4,10 +4,10 @@ Context-optimized guide for AI agents to integrate and use Widgeteer with Qt app
 
 ## Quick Reference
 
-**What**: Qt6 UI testing/automation library with WebSocket API
-**Use case**: Automated testing, UI automation, AI-driven Qt app control
-**Protocol**: WebSocket (ws://host:port?token=key)
-**Message format**: JSON with `type` field
+- **What**: Qt6 UI testing/automation library with WebSocket API
+- **Use case**: Automated testing, UI automation, AI-driven Qt app control
+- **Protocol**: WebSocket (ws://host:port?token=key)
+- **Message format**: JSON with `type` field
 
 ## Integration (C++ Side)
 

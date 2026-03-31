@@ -21,3 +21,5 @@ ui_*.h
 /coverage/*
 /coverage_html/*
 /tests/__pycache__/*
+
+venv/

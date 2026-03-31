@@ -24,7 +24,7 @@ A comprehensive guide to using Widgeteer for Qt6 UI testing and automation.
 
 - Qt6 (6.2 or later)
 - C++17 compatible compiler
-- CMake 3.18+
+- CMake 3.16+
 - Python 3.8+ (for test client)
 
 ### Building Widgeteer
@@ -382,7 +382,7 @@ result = client.screenshot(target="@name:chartWidget")
 
 # Save to file
 import base64
-image_data = base64.b64decode(result.data["result"]["screenshot"])
+image_data = base64.b64decode(result.value)
 with open("screenshot.png", "wb") as f:
     f.write(image_data)
 ```
