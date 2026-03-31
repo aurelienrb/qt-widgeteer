@@ -2094,7 +2094,15 @@ QJsonObject CommandExecutor::invokeMethod(QObject* object, const QString& method
 
       // Convert to expected type
       if (paramType != QMetaType::QVariant && argVariant.typeId() != paramType) {
-        argVariant.convert(QMetaType(paramType));
+        if (!argVariant.convert(QMetaType(paramType))) {
+          QJsonObject error;
+          error["code"] = ErrorCode::InvocationFailed;
+          error["message"] = QStringLiteral("Invalid param %1 (with value '%2') for method '%3'")
+                                 .arg(i + 1)
+                                 .arg(args.at(i).toString())
+                                 .arg(methodName);
+          return QJsonObject{ { "error", error } };
+        }
       }
       variantStorage.append(argVariant);
     }

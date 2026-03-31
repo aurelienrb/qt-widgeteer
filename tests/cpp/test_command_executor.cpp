@@ -7,6 +7,7 @@
 #include <QDateEdit>
 #include <QDoubleSpinBox>
 #include <QGroupBox>
+#include <QJsonDocument>
 #include <QPlainTextEdit>
 #include <QLabel>
 #include <QLineEdit>
@@ -27,6 +28,18 @@
 #include <QVBoxLayout>
 
 using namespace widgeteer;
+
+class TestService : public QObject {
+  Q_OBJECT
+
+public:
+  explicit TestService(QObject* parent = nullptr) : QObject(parent) {
+  }
+
+  Q_INVOKABLE int add(int a, int b) {
+    return a + b;
+  }
+};
 
 class TestCommandExecutor : public QObject {
   Q_OBJECT
@@ -1710,6 +1723,52 @@ private slots:
     cmd.name = "call";
     cmd.params["object"] = "nonexistent";
     cmd.params["method"] = "click";
+
+    Response resp = executor.execute(cmd);
+
+    QVERIFY(!resp.success);
+  }
+
+  void testCallServiceWithParams() {
+    CommandExecutor executor;
+
+    TestService service;
+
+    QHash<QString, QPointer<QObject>> registeredObjects;
+    registeredObjects["myService"] = &service;
+    executor.setRegisteredObjects(&registeredObjects);
+
+    Command cmd;
+    cmd.id = "call-2";
+    cmd.name = "call";
+    cmd.params["object"] = "myService";
+    cmd.params["method"] = "add";
+    // converting from str("2") to int(2) should succeed
+    cmd.params["args"] = QJsonArray{ 1, "2" };
+
+    Response resp = executor.execute(cmd);
+
+    QVERIFY(resp.success);
+    const QJsonObject resultJson = resp.toJson()["result"].toObject();
+    QCOMPARE(resultJson["return"].toInt(), 3);
+  }
+
+  void testCallServiceWithInvalidParamType() {
+    CommandExecutor executor;
+
+    TestService service;
+
+    QHash<QString, QPointer<QObject>> registeredObjects;
+    registeredObjects["myService"] = &service;
+    executor.setRegisteredObjects(&registeredObjects);
+
+    Command cmd;
+    cmd.id = "call-invalid-param-type";
+    cmd.name = "call";
+    cmd.params["object"] = "myService";
+    cmd.params["method"] = "add";
+    // converting from str("2.0") to int should fail
+    cmd.params["args"] = QJsonArray{ 1, "2.0" };
 
     Response resp = executor.execute(cmd);
 
