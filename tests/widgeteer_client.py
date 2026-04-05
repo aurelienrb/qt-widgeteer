@@ -163,8 +163,12 @@ class Response:
             return self.data["return"]
 
         # Action confirmations - return True for success
-        action_keys = ("clicked", "typed", "focused", "scrolled", "hovered",
-                       "waited", "invoked", "dragged", "set")
+        action_keys = ("accepted", "rejected", "closed", "clicked",
+                       "double_clicked", "right_clicked", "typed",
+                       "key_pressed", "key_sequence_sent", "dragged",
+                       "scrolled", "hovered", "focused", "property_set",
+                       "invoked", "value_set", "waited", "idle",
+                       "signal_received", "slept", "quitting")
         for key in action_keys:
             if key in self.data:
                 return self.data[key]
